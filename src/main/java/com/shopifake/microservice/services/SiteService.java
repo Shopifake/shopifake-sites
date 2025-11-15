@@ -3,6 +3,7 @@ package com.shopifake.microservice.services;
 import com.shopifake.microservice.dtos.AlternativeSlugSuggestion;
 import com.shopifake.microservice.dtos.CreateSiteRequest;
 import com.shopifake.microservice.dtos.SiteResponse;
+import com.shopifake.microservice.dtos.UpdateSiteRequest;
 import com.shopifake.microservice.entities.Currency;
 import com.shopifake.microservice.entities.Language;
 import com.shopifake.microservice.entities.Site;
@@ -120,6 +121,125 @@ public class SiteService {
     }
 
     /**
+     * Update a site.
+     *
+     * @param siteId the site ID
+     * @param request the update request
+     * @return the updated site response
+     * @throws IllegalArgumentException if site not found or invalid data
+     */
+    @Transactional
+    public SiteResponse updateSite(final UUID siteId, final UpdateSiteRequest request) {
+        log.info("Updating site: {}", siteId);
+
+        Site site = siteRepository.findById(siteId)
+                .orElseThrow(() -> new IllegalArgumentException("Site not found with ID: " + siteId));
+
+        // Update name if provided
+        if (request.getName() != null && !request.getName().isBlank()) {
+            site.setName(request.getName());
+        }
+
+        // Update slug if provided
+        if (request.getSlug() != null && !request.getSlug().isBlank()) {
+            String normalizedSlug = slugService.normalizeSlug(request.getSlug());
+            // Check if slug is available (excluding current site)
+            if (siteRepository.existsBySlug(normalizedSlug) 
+                    && !site.getSlug().equals(normalizedSlug)) {
+                log.warn("Slug already taken: {}", normalizedSlug);
+                throw new IllegalArgumentException("Slug already taken: " + normalizedSlug);
+            }
+            site.setSlug(normalizedSlug);
+        }
+
+        // Update description if provided
+        if (request.getDescription() != null) {
+            site.setDescription(request.getDescription());
+        }
+
+        // Update currency if provided
+        if (request.getCurrency() != null && !request.getCurrency().isBlank()) {
+            Currency currency;
+            try {
+                currency = Currency.valueOf(request.getCurrency().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid currency: {}", request.getCurrency());
+                throw new IllegalArgumentException("Invalid currency: " + request.getCurrency(), e);
+            }
+            site.setCurrency(currency);
+        }
+
+        // Update language if provided
+        if (request.getLanguage() != null && !request.getLanguage().isBlank()) {
+            Language language;
+            try {
+                language = Language.valueOf(request.getLanguage().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid language: {}", request.getLanguage());
+                throw new IllegalArgumentException("Invalid language: " + request.getLanguage(), e);
+            }
+            site.setLanguage(language);
+        }
+
+        // Update config if provided
+        if (request.getConfig() != null) {
+            if (request.getConfig().isEmpty()) {
+                log.warn("Config is empty");
+                throw new IllegalArgumentException("Config cannot be empty");
+            }
+            configValidationService.validateAndParse(request.getConfig());
+            site.setConfig(request.getConfig());
+        }
+
+        site.setUpdatedAt(LocalDateTime.now());
+
+        try {
+            Site updatedSite = siteRepository.save(site);
+            log.info("Site updated successfully with ID: {}", siteId);
+            return mapToResponse(updatedSite);
+        } catch (Exception e) {
+            log.error("Error updating site with ID: {}", siteId, e);
+            throw new RuntimeException("Failed to update site due to database error", e);
+        }
+    }
+
+    /**
+     * Update the status of a site.
+     *
+     * @param siteId the site ID
+     * @param status the new status
+     * @return the updated site response
+     * @throws IllegalArgumentException if site not found or invalid status
+     */
+    @Transactional
+    public SiteResponse updateSiteStatus(final UUID siteId, final String status) {
+        log.info("Updating status for site: {} to {}", siteId, status);
+
+        Site site = siteRepository.findById(siteId)
+                .orElseThrow(() -> new IllegalArgumentException("Site not found with ID: " + siteId));
+
+        SiteStatus newStatus;
+        try {
+            newStatus = SiteStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid status: {}", status);
+            throw new IllegalArgumentException("Invalid status: " + status, e);
+        }
+
+        site.setStatus(newStatus);
+        site.setUpdatedAt(LocalDateTime.now());
+
+        try {
+            Site updatedSite = siteRepository.save(site);
+            log.info("Site status updated successfully for site: {}", siteId);
+            return mapToResponse(updatedSite);
+        } catch (Exception e) {
+            log.error("Error updating site status for site: {}", siteId, e);
+            throw new RuntimeException("Failed to update site status due to database error", e);
+        }
+    }
+
+    /**
      * Get all sites owned by a specific owner.
      *
      * @param ownerId the owner ID
@@ -167,6 +287,30 @@ public class SiteService {
     public boolean isSlugAvailable(final String slug) {
         String normalizedSlug = slugService.normalizeSlug(slug);
         return !siteRepository.existsBySlug(normalizedSlug);
+    }
+
+    /**
+     * Delete a site by ID.
+     *
+     * @param siteId the site ID
+     * @throws IllegalArgumentException if site not found
+     */
+    @Transactional
+    public void deleteSite(final UUID siteId) {
+        log.info("Deleting site with ID: {}", siteId);
+
+        if (!siteRepository.existsById(siteId)) {
+            log.warn("Site not found with ID: {}", siteId);
+            throw new IllegalArgumentException("Site not found with ID: " + siteId);
+        }
+
+        try {
+            siteRepository.deleteById(siteId);
+            log.info("Site deleted successfully with ID: {}", siteId);
+        } catch (Exception e) {
+            log.error("Error deleting site with ID: {}", siteId, e);
+            throw new RuntimeException("Failed to delete site due to database error", e);
+        }
     }
 
     /**

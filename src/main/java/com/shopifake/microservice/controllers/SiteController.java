@@ -6,6 +6,8 @@ import com.shopifake.microservice.dtos.CurrenciesResponse;
 import com.shopifake.microservice.dtos.LanguagesResponse;
 import com.shopifake.microservice.dtos.SiteResponse;
 import com.shopifake.microservice.dtos.SlugAvailabilityResponse;
+import com.shopifake.microservice.dtos.UpdateSiteRequest;
+import com.shopifake.microservice.dtos.UpdateSiteStatusRequest;
 import com.shopifake.microservice.entities.Currency;
 import com.shopifake.microservice.entities.Language;
 import com.shopifake.microservice.services.SiteService;
@@ -19,7 +21,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -61,16 +65,12 @@ public class SiteController {
     })
     public ResponseEntity<SiteResponse> createSite(
             @Valid @RequestBody final CreateSiteRequest request,
-            @RequestHeader(value = "X-Owner-Id", required = false) final Long ownerId) {
+            @RequestHeader(value = "X-Owner-Id") final Long ownerId) {
 
         log.info("Received request to create site: {}", request.getName());
 
-        // For now, use a default owner ID if not provided in header
-        // In a real scenario, this would come from authentication context
-        Long effectiveOwnerId = ownerId != null ? ownerId : 1L;
-
         try {
-            SiteResponse response = siteService.createSite(request, effectiveOwnerId);
+            SiteResponse response = siteService.createSite(request, ownerId);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             log.warn("Failed to create site: {}", e.getMessage());
@@ -95,6 +95,52 @@ public class SiteController {
 
         log.debug("Fetching site with ID: {}", siteId);
         SiteResponse response = siteService.getSiteById(siteId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Update a site.
+     *
+     * @param siteId the site ID
+     * @param request the update request
+     * @return the updated site response
+     */
+    @PatchMapping("/{siteId}")
+    @Operation(summary = "Update a site", description = "Updates site fields (name, slug, description, currency, language, config)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Site updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request data or site not found"),
+            @ApiResponse(responseCode = "404", description = "Site not found")
+    })
+    public ResponseEntity<SiteResponse> updateSite(
+            @Parameter(description = "Site ID") @PathVariable final UUID siteId,
+            @Valid @RequestBody final UpdateSiteRequest request) {
+
+        log.info("Updating site: {}", siteId);
+        SiteResponse response = siteService.updateSite(siteId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Update the status of a site.
+     *
+     * @param siteId the site ID
+     * @param request the status update request
+     * @return the updated site response
+     */
+    @PatchMapping("/{siteId}/status")
+    @Operation(summary = "Update site status", description = "Updates only the status of a site")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Site status updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid status or site not found"),
+            @ApiResponse(responseCode = "404", description = "Site not found")
+    })
+    public ResponseEntity<SiteResponse> updateSiteStatus(
+            @Parameter(description = "Site ID") @PathVariable final UUID siteId,
+            @Valid @RequestBody final UpdateSiteStatusRequest request) {
+
+        log.info("Updating status for site: {}", siteId);
+        SiteResponse response = siteService.updateSiteStatus(siteId, request.getStatus());
         return ResponseEntity.ok(response);
     }
 
@@ -212,6 +258,32 @@ public class SiteController {
                 .build();
         
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Delete a site by ID.
+     *
+     * @param siteId the site ID
+     * @return no content response
+     */
+    @DeleteMapping("/{siteId}")
+    @Operation(summary = "Delete a site", description = "Deletes a site by its ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Site deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Site not found")
+    })
+    public ResponseEntity<Void> deleteSite(
+            @Parameter(description = "Site ID") @PathVariable final UUID siteId) {
+
+        log.info("Received request to delete site: {}", siteId);
+
+        try {
+            siteService.deleteSite(siteId);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            log.warn("Failed to delete site: {}", e.getMessage());
+            throw e;
+        }
     }
 }
 
