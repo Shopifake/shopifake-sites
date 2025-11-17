@@ -66,7 +66,7 @@ public class SiteController {
     })
     public ResponseEntity<SiteResponse> createSite(
             @Valid @RequestBody final CreateSiteRequest request,
-            @RequestHeader(value = "X-Owner-Id") final Long ownerId) {
+            @RequestHeader(value = "X-Owner-Id") final UUID ownerId) {
 
         log.info("Received request to create site: {}", request.getName());
 
@@ -174,17 +174,18 @@ public class SiteController {
     @GetMapping
     @Operation(summary = "Get sites by owner", description = "Retrieves all sites owned by a specific owner")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Sites retrieved successfully")
+            @ApiResponse(responseCode = "200", description = "Sites retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Owner ID is required")
     })
     public ResponseEntity<List<SiteResponse>> getSitesByOwner(
-            @Parameter(description = "Owner ID") @RequestParam(required = false) final Long ownerId) {
-
-        // For now, use a default owner ID if not provided
-        // In a real scenario, this would come from authentication context
-        Long effectiveOwnerId = ownerId != null ? ownerId : 1L;
-
-        log.debug("Fetching sites for owner: {}", effectiveOwnerId);
-        List<SiteResponse> responses = siteService.getSitesByOwner(effectiveOwnerId);
+            @Parameter(description = "Owner ID") @RequestParam(required = true) final UUID ownerId) {
+        
+        if (ownerId == null) {
+            log.warn("Owner ID is required");
+            return ResponseEntity.badRequest().build();
+        }
+        log.debug("Fetching sites for owner: {}", ownerId);
+        List<SiteResponse> responses = siteService.getSitesByOwner(ownerId);
         return ResponseEntity.ok(responses);
     }
 

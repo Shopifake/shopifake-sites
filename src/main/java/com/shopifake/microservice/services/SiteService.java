@@ -44,7 +44,7 @@ public class SiteService {
      * @throws IllegalArgumentException if slug is already taken
      */
     @Transactional
-    public SiteResponse createSite(final CreateSiteRequest request, final Long ownerId) {
+    public SiteResponse createSite(final CreateSiteRequest request, final UUID ownerId) {
         log.info("Creating site for owner: {}", ownerId);
 
         String slug = request.getSlug();
@@ -268,7 +268,7 @@ public class SiteService {
      * @param ownerId the owner ID
      * @return list of site responses
      */
-    public List<SiteResponse> getSitesByOwner(final Long ownerId) {
+    public List<SiteResponse> getSitesByOwner(final UUID ownerId) {
         log.debug("Fetching sites for owner: {}", ownerId);
         List<Site> sites = siteRepository.findByOwnerId(ownerId);
         return sites.stream()

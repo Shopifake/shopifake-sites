@@ -27,7 +27,7 @@ public class SiteResponse {
     private Currency currency;
     private Language language;
     private SiteStatus status;
-    private Long ownerId;
+    private UUID ownerId;
     private String config;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

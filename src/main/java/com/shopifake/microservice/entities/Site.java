@@ -54,7 +54,7 @@ public class Site {
     private SiteStatus status = SiteStatus.DRAFT;
 
     @Column(name = "owner_id", nullable = false)
-    private Long ownerId;
+    private UUID ownerId;
 
     @Column(columnDefinition = "TEXT")
     private String config;

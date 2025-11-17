@@ -36,7 +36,7 @@ public interface SiteRepository extends JpaRepository<Site, UUID> {
      * @param ownerId the owner ID
      * @return list of sites owned by the owner
      */
-    List<Site> findByOwnerId(Long ownerId);
+    List<Site> findByOwnerId(UUID ownerId);
 
     /**
      * Count sites owned by a specific owner.
@@ -44,6 +44,6 @@ public interface SiteRepository extends JpaRepository<Site, UUID> {
      * @param ownerId the owner ID
      * @return the count of sites owned by the owner
      */
-    long countByOwnerId(Long ownerId);
+    long countByOwnerId(UUID ownerId);
 }
 

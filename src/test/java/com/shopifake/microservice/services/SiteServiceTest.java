@@ -56,7 +56,7 @@ class SiteServiceTest {
     private SiteService siteService;
 
     private UUID testSiteId;
-    private Long testOwnerId;
+    private UUID testOwnerId;
     private Site testSite;
     private CreateSiteRequest createRequest;
     private String validConfigJson;
@@ -64,7 +64,7 @@ class SiteServiceTest {
     @BeforeEach
     void setUp() {
         testSiteId = UUID.randomUUID();
-        testOwnerId = 1L;
+        testOwnerId = UUID.randomUUID();
         validConfigJson = "{\"bannerUrl\":\"https://example.com/banner.jpg\","
                 + "\"name\":\"Test Site\",\"title\":\"Test Title\","
                 + "\"subtitle\":\"Test Subtitle\",\"heroDescription\":\"Test Description\","
