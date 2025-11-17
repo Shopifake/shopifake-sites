@@ -16,28 +16,8 @@ public enum SiteStatus {
     ACTIVE,
 
     /**
-     * Site is pending approval or activation.
-     */
-    PENDING,
-
-    /**
-     * Site is suspended, temporarily unavailable.
-     */
-    SUSPENDED,
-
-    /**
-     * Site is archived, no longer active but preserved.
-     */
-    ARCHIVED,
-
-    /**
      * Site is disabled, not accessible.
      */
     DISABLED,
-
-    /**
-     * Site is deleted, marked for removal.
-     */
-    DELETED
 }
 

@@ -3,6 +3,7 @@ package com.shopifake.microservice.services;
 import com.shopifake.microservice.dtos.AlternativeSlugSuggestion;
 import com.shopifake.microservice.dtos.CreateSiteRequest;
 import com.shopifake.microservice.dtos.SiteResponse;
+import com.shopifake.microservice.dtos.SiteSlugResponse;
 import com.shopifake.microservice.dtos.UpdateSiteRequest;
 import com.shopifake.microservice.entities.Currency;
 import com.shopifake.microservice.entities.Language;
@@ -121,6 +122,22 @@ public class SiteService {
     }
 
     /**
+     * Get the slug of a site by ID.
+     *
+     * @param siteId the site ID
+     * @return the site slug response
+     * @throws IllegalArgumentException if site not found
+     */
+    public SiteSlugResponse getSiteSlug(final UUID siteId) {
+        log.debug("Fetching slug for site with ID: {}", siteId);
+        Site site = siteRepository.findById(siteId)
+                .orElseThrow(() -> new IllegalArgumentException("Site not found with ID: " + siteId));
+        return SiteSlugResponse.builder()
+                .slug(site.getSlug())
+                .build();
+    }
+
+    /**
      * Update a site.
      *
      * @param siteId the site ID
@@ -226,6 +243,12 @@ public class SiteService {
             throw new IllegalArgumentException("Invalid status: " + status, e);
         }
 
+        if (site.getStatus() == SiteStatus.ACTIVE && newStatus == SiteStatus.DRAFT) {
+            throw new IllegalArgumentException("Cannot update status from " + site.getStatus() + " to " + newStatus);
+        }
+        else if (site.getStatus() == SiteStatus.DISABLED && newStatus == SiteStatus.DRAFT) {
+            throw new IllegalArgumentException("Cannot update status from " + site.getStatus() + " to " + newStatus);
+        }
         site.setStatus(newStatus);
         site.setUpdatedAt(LocalDateTime.now());
 

@@ -5,6 +5,7 @@ import com.shopifake.microservice.dtos.CreateSiteRequest;
 import com.shopifake.microservice.dtos.CurrenciesResponse;
 import com.shopifake.microservice.dtos.LanguagesResponse;
 import com.shopifake.microservice.dtos.SiteResponse;
+import com.shopifake.microservice.dtos.SiteSlugResponse;
 import com.shopifake.microservice.dtos.SlugAvailabilityResponse;
 import com.shopifake.microservice.dtos.UpdateSiteRequest;
 import com.shopifake.microservice.dtos.UpdateSiteStatusRequest;
@@ -95,6 +96,26 @@ public class SiteController {
 
         log.debug("Fetching site with ID: {}", siteId);
         SiteResponse response = siteService.getSiteById(siteId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get the slug of a site by ID.
+     *
+     * @param siteId the site ID
+     * @return the site slug response
+     */
+    @GetMapping("/{siteId}/slug")
+    @Operation(summary = "Get site slug", description = "Retrieves only the slug of a site by its ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Site slug found"),
+            @ApiResponse(responseCode = "404", description = "Site not found")
+    })
+    public ResponseEntity<SiteSlugResponse> getSiteSlug(
+            @Parameter(description = "Site ID") @PathVariable final UUID siteId) {
+
+        log.debug("Fetching slug for site with ID: {}", siteId);
+        SiteSlugResponse response = siteService.getSiteSlug(siteId);
         return ResponseEntity.ok(response);
     }
 
