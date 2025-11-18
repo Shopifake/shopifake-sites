@@ -122,6 +122,20 @@ public class SiteService {
     }
 
     /**
+     * Get a site by its slug.
+     *
+     * @param slug the site slug
+     * @return the site response
+     */
+    public SiteResponse getSiteBySlug(final String slug) {
+        log.debug("Fetching site with slug: {}", slug);
+        String normalizedSlug = slugService.normalizeSlug(slug);
+        Site site = siteRepository.findBySlug(normalizedSlug)
+                .orElseThrow(() -> new IllegalArgumentException("Site not found with slug: " + normalizedSlug));
+        return mapToResponse(site);
+    }
+
+    /**
      * Get the slug of a site by ID.
      *
      * @param siteId the site ID

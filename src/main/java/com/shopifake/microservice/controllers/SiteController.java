@@ -100,6 +100,26 @@ public class SiteController {
     }
 
     /**
+     * Get a site by slug.
+     *
+     * @param slug the site slug
+     * @return the site response
+     */
+    @GetMapping("/slug/{slug}")
+    @Operation(summary = "Get site by slug", description = "Retrieves a site by its slug")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Site found"),
+            @ApiResponse(responseCode = "404", description = "Site not found")
+    })
+    public ResponseEntity<SiteResponse> getSiteBySlug(
+            @Parameter(description = "Site slug") @PathVariable final String slug) {
+
+        log.debug("Fetching site with slug: {}", slug);
+        SiteResponse response = siteService.getSiteBySlug(slug);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Get the slug of a site by ID.
      *
      * @param siteId the site ID
