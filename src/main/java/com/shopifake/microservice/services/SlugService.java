@@ -14,7 +14,7 @@ public class SlugService {
 
     private static final Pattern NON_LATIN = Pattern.compile("[^\\w-]");
     private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
-    private static final Pattern EDGES_DASHES = Pattern.compile("(^-|-$)");
+    private static final Pattern EDGES_DASHES = Pattern.compile("(?:^-)|(?:-$)");
 
     /**
      * Generate a slug from a given text.
