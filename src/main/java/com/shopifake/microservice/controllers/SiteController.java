@@ -41,7 +41,7 @@ import java.util.UUID;
  * REST controller for site management operations.
  */
 @RestController
-@RequestMapping("/api/sites")
+@RequestMapping("/")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Sites", description = "API for managing sites")
